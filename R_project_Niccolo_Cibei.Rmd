@@ -1,0 +1,1336 @@
+---
+title: "Exploring the Correlation Between Qualifying Performance and Race Results in Formula 1 from 2010 Onward"
+output:
+  html_document:
+    df_print: paged
+---
+
+## 1. Summary
+
+Formula 1, a pinnacle of motorsport, combines technological excellence and athletic prowess, creating a captivating spectacle for fans worldwide. In this project, we aim to dissect the correlation between qualifying performances and race outcomes in Formula 1, leveraging a comprehensive dataset from Kaggle covering the World Championship from 1950 to 2020.
+
+## Objectives
+
+1.  **Correlation Exploration:** Investigate the relationship between qualifying positions and final race standings.
+2.  **Track Variability:** Explore potential variations in qualifying-race correlations across different tracks.
+3.  **Temporal Trends:** Examine how the correlation dynamics have shifted over the years.
+4.  **Strategic Impact:** Assess the influence of strategic elements like pit stops on race results.
+
+## Methodology
+
+We will employ statistical and visual techniques to evaluate the strength and direction of the correlation, providing a nuanced analysis of Formula 1 competition dynamics. Merging datasets on qualifying positions, race results, and strategic events will enable us to uncover insights that illuminate the complex interplay between qualifying performances and race outcomes.
+
+## Keywords
+
+Formula 1, Qualifying, Race Results, Correlation Analysis, Track Variability, Temporal Trends
+
+Through this comprehensive analysis, we seek to unravel the intricate relationship between qualifying and race performance, contributing valuable insights to the understanding of Formula 1 dynamics. The results of our study will not only inform motorsport enthusiasts but also provide strategic implications for teams and stakeholders within the Formula 1 ecosystem.
+
+------------------------------------------------------------------------
+
+## 2. Ask Phase
+
+# 2.1 Research Questions
+
+The primary objective of this capstone project is to conduct an in-depth analysis of the Formula 1 dataset, focusing on identifying correlations and performing exploratory data analysis (EDA). The key research questions guiding our exploration are as follows:
+
+1.  **Correlations Between Qualifying Positions and Final Race Standings:**
+    -   Explore the relationship between qualifying positions and race outcomes to identify any statistically significant correlations.
+2.  **Variations Across Different Tracks in the Formula 1 Circuit:**
+    -   Investigate potential variations in the strength and direction of correlations based on the characteristics of different racing tracks.
+3.  **Temporal Shifts in Correlation Dynamics Over the Years:**
+    -   Examine historical trends to identify notable changes in the correlation between qualifying positions and race outcomes over the years.
+4.  **Impact of Strategic Elements on Final Race Standings:**
+    -   Analyze the influence of strategic elements, such as pit stops and safety car interventions, on race results and identify correlations between these elements and the final standings.
+5.  **Exploration of Different Drivers and Teams:**
+    -   Investigate how different drivers and teams contribute to the overall correlation patterns and explore potential disparities among them.
+
+Through the exploration of these research questions, we aim to unravel the complexities of Formula 1 competition dynamics and shed light on the factors influencing qualifying and race results.
+
+------------------------------------------------------------------------
+
+# 3. Prepare Phase
+
+## 3.1 Dataset Used
+
+The Formula 1 World Championship (1950 - 2023) dataset (CC0: Public Domain) will be the cornerstone of this analysis, generously shared on Kaggle by the user Vopani.
+The dataset is available at the following link: [Formula 1 World Championship (1950 - 2020)](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020).
+
+## 3.2 Accessibility and Privacy of Data
+
+The data is licensed under CC0: Public Domain, waiving all of his or her rights to the work worldwide under copyright law, including all related and neighboring rights, to the extend by law. The work can be copied, modified, distributed and perform the work, even for commercial purposes, all without asking permission.
+
+## 3.3 Information About Our Dataset
+
+The data is sourced and compiled from [Ergast Motor Racing Data API](http://ergast.com/mrd/).
+
+## 3.4 Data Organization and Verification
+
+The dataset is a collection of 14 .csv files. The datasets consists of wide-ranging information from constructors results, circuits, drivers information, lap times, races results, sprint races results, qualyfing results and drivers standing; Several data frames will not be used for the analysis because of the following reasons:
+
+-   They are subsets of larger, more complete data frames.
+-   They are not interesting for our analysis.
+
+## 3.5 Data Limitations
+
+### 3.5.1 Incomplete Metadata
+
+-   **Limitation:** The dataset lacks certain metadata, such as location, weather conditions, and specific contextual details.
+-   **Impact:** Contextualizing race performance variations attributed to external factors may be challenging.
+
+### 3.5.2 Limited Demographic Information
+
+-   **Limitation:** Demographic data, including age, nationality, and other personal details, may not be available or may be incomplete.
+-   **Impact:** Understanding the diverse characteristics of drivers is crucial, especially in exploring correlations and variations in performance.
+
+### 3.5.3 Variable Data Quality Across Seasons
+
+-   **Limitation:** Data quality may vary between seasons due to changes in regulations, technology, and reporting standards.
+-   **Impact:** Analyzing correlations over time may be influenced by inconsistencies in data recording methods.
+
+### 3.5.4 Event-Specific External Factors
+
+-   **Limitation:** External factors, such as weather conditions, track characteristics, and race incidents, may significantly impact race outcomes.
+-   **Impact:** Isolating the influence of qualifying positions on race results may be challenging without accounting for these external variables.
+
+### 3.5.5 Team Strategy Dynamics
+
+-   **Limitation:** The dataset may not comprehensively capture team strategies, including pit stops, tire choices, and strategic decisions during the race.
+-   **Impact:** Correlating individual driver performance with race outcomes may not reflect the full spectrum of team influence on results.
+
+### 3.5.6 Limited Granularity in Qualifying Data
+
+-   **Limitation:** The dataset may lack granular details about specific aspects of qualifying sessions, such as driver errors, technical issues, or incidents during the qualifying laps.
+-   **Impact:** Understanding the nuances behind qualifying positions may be restricted, limiting the depth of correlation analysis.
+
+Understanding these limitations is crucial for a nuanced interpretation of the analysis and for acknowledging the potential constraints in drawing definitive conclusions.
+
+------------------------------------------------------------------------
+
+# 4. Process Phase
+
+Data processing, analysis, and visualization will be conducted using R Programming within R Studio.
+
+## 4.1 Installing Packages and Opening Libraries
+
+For our analysis, we will utilize the following packages:
+
+-   'tidyverse'
+-   'corrplot'
+-   'lmtest'
+-   'dplyr'
+-   'viridis'
+-   'leaflet'
+
+```{r}
+#libraries
+library(tidyverse)
+library(corrplot)
+library(lmtest)
+library(dplyr)
+library(viridis)
+library(leaflet)
+```
+
+## 4.2 Importing datasets
+
+The following tables will be used:
+
+```{r}
+#read data
+sprint_results_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/sprint_results.csv")
+seasons_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/seasons.csv")
+results_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/results.csv")
+races_df <- read.csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/races.csv")
+qualifying_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/qualifying.csv")
+pit_stops_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/pit_stops.csv")
+lap_times_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/lap_times.csv")
+circuits_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/circuits.csv")
+constructors_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/constructors.csv")
+constructors_results_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/constructor_results.csv")
+constructors_standing_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/constructor_standings.csv")
+driver_standings_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/driver_standings.csv")
+drivers_df <- read_csv("C:/Users/cibei/OneDrive/Desktop/Coding_for_data_science/R_folder/R-project/dataset/drivers.csv")
+
+```
+
+### 4.3 Preview and Inspection of Datasets
+
+Conducting a preliminary preview and concise inspection of the selected data frames to gain insights into their structure and content.
+
+```{r}
+#check data
+head(sprint_results_df)
+head(seasons_df)
+head(results_df)
+head(races_df)
+head(qualifying_df)
+head(pit_stops_df)
+head(lap_times_df)
+head(circuits_df)
+head(constructors_df)
+head(constructors_results_df)
+head(constructors_standing_df)
+head(driver_standings_df)
+head(drivers_df)
+```
+
+```{r}
+# summary of the data
+summary(sprint_results_df)
+summary(results_df)
+summary(races_df)
+summary(qualifying_df)
+summary(pit_stops_df)
+summary(lap_times_df)
+summary(circuits_df)
+```
+
+### 4.4 Cleaning and formatting datasets
+
+#### 4.4.1 Checking for missing values
+
+We want to be sure that are not missing values.
+
+```{r}
+# Check for missing values
+sapply(list(sprint_results_df, seasons_df, results_df, races_df,
+            qualifying_df, pit_stops_df, lap_times_df, circuits_df),
+       function(x) sum(is.na(x)))
+```
+
+```{r}
+# Find rows with NaN values in 'qualifying_df'
+rows_with_na <- which(is.na(qualifying_df), arr.ind = TRUE)
+
+# Display rows with NaN values
+if (length(rows_with_na) > 0) {
+  print(results_df[rows_with_na[, 1], ], n= 10)
+} else {
+  cat("No NaN values found in 'qualyfing_df'.\n")
+}
+```
+
+```{r}
+# Find rows with NaN values in 'results_df'
+rows_with_na_result_df <- which(is.na(results_df), arr.ind = TRUE)
+
+# Display rows with NaN values
+if (length(rows_with_na_result_df) > 0) {
+  print(results_df[rows_with_na_result_df[, 1], ], n= length(rows_with_na_result_df))
+} else {
+  cat("No NaN values found in 'results_df'.\n")
+}
+```
+In the qualifying_df, NaN values are present in columns that are not pertinent to our analysis. These irrelevant NaNs will be removed in the subsequent code.
+
+For the results_df, certain columns contain NaN values that are crucial for our analysis. We will strategically address and handle these NaNs when utilizing the data frame to ensure the integrity of our analysis.
+
+#### 4.4.2 Selecting only the interested columns
+
+Cleaning the selected data frames. We will remove columns that are not relevant to our analysis.
+
+```{r}
+#clean data
+sprint_results_df <- sprint_results_df %>% 
+  select(-number, -position, -positionText, -points, -laps, -time, -milliseconds, -fastestLap)
+
+results_df <- results_df %>% 
+  select(-number,-position, -positionText, -laps, -time, -milliseconds, -fastestLap, -rank)
+circuits_df <- circuits_df %>% 
+  select(-url)
+
+qualifying_df <- qualifying_df %>% 
+  select(-number, -q1, -q2, -q3)
+
+races_df <- races_df %>% 
+  select(raceId, year, round, circuitId, name)
+```
+
+#### 4.4.3 Duplicates
+
+We will now look for any duplicates:
+
+```{r}
+
+# Check for duplicates in each data frame
+for (df in list(sprint_results_df, seasons_df, results_df, races_df,
+                qualifying_df, pit_stops_df, lap_times_df, circuits_df, 
+                drivers_df, constructors_df, constructors_results_df,
+                driver_standings_df, constructors_standing_df)) {
+  duplicate_rows <- df[duplicated(df), ]
+  
+  # Print the duplicate rows if any
+  if (nrow(duplicate_rows) > 0) {
+    cat("Duplicate rows in", deparse(substitute(df)), ":\n")
+    print(duplicate_rows)
+  } else {
+    cat("No duplicate rows found in", deparse(substitute(df)), ".\n")
+  }
+}
+```
+
+#### 4.4.4 Check Consistency Between Qualifying Position and Grid Position
+
+We aim to verify the consistency between the qualifying position and grid position for each raceId and driverId combination. Ideally, these positions should differ due to the possibility of penalizations affecting the grid.
+
+```{r}
+# Check if position and grid have the same data for each raceId and driverId
+matching_positions <- qualifying_df %>%
+  inner_join(results_df, by = c("raceId", "driverId")) %>%
+  filter(position != grid) %>%  # filter where position in qualifying is different from grid in results
+  select(raceId, driverId, position, grid)
+
+# Display the result
+if (nrow(matching_positions) > 0) {
+  cat("Rows where position and grid are different for the same raceId and driverId:\n")
+  print(matching_positions)
+} else {
+  cat("Position and grid are the same for all rows with matching raceId and driverId.\n")
+}
+
+```
+
+In the Formula 1 dataset, the grid position and the final race position may not always be identical for rows with the same raceId and driverId. The variation between grid position and final race position within the same race and for the same driver implies that the dataset considers additional factors beyond the initial qualifying performance. These factors may include grid penalties, disqualifications, or other race-specific events that impact a driver's starting position.
+
+#### 4.5 Filtering and Merging Datasets
+
+To focus our analysis, we will narrow down the dataset to include only records from the year 2010 onwards. Subsequently, we will perform a merge operation on the 'races' and 'results' datasets, utilizing the 'raceId' as the key. This step is crucial for consolidating relevant information and preparing the data for further in-depth analysis.
+
+For the sprint dataset we will not do any filtering, since it only contains data from 2021.
+
+```{r}
+# Filter races for the season 2010 and later
+races_data <- races_df %>%
+  filter(year >= 2010)
+
+# Filter and clean results data for the selected races
+merged_data <- results_df %>%
+  inner_join(races_data, by = "raceId") %>%
+  filter(!is.na(grid) & !is.na(positionOrder))  # Remove rows with missing values
+
+sprint_merged_data <- sprint_results_df %>%
+  inner_join(races_data, by = "raceId") %>%
+  filter(!is.na(grid) & !is.na(positionOrder))  # Remove rows with missing values
+
+```
+
+## 5. Exploratory and Correlation Data Analysis
+
+In this chapter, we embark on a journey of Exploratory and Correlation Data Analysis to unravel the intricate patterns, correlations, and trends residing within the Formula 1 data frames. This analysis serves as a crucial prelude to in-depth statistical analyses, offering a comprehensive understanding of the data's structure and characteristics.
+
+### Objectives:
+
+1.  **Uncover Patterns and Trends:**
+    -   It enables us to identify inherent patterns, both visually and statistically, shedding light on potential relationships among variables.
+2.  **Validate Assumptions:**
+    -   Through graphical representations and summary statistics, we validate assumptions made during the earlier stages of data processing.
+3.  **Identify Outliers and Anomalies:**
+    -   Robust visualizations and descriptive statistics aid in the identification of outliers or anomalies that may impact subsequent analyses.
+4.  **Understand Data Distribution:**
+    -   bar plots and scatter plots offer insights into the distribution of key variables, guiding our understanding of the dataset's characteristics.
+5.  **Correlation Exploration:**
+    -   Visualizing correlations among variables helps uncover potential dependencies, steering us towards more targeted analyses.
+
+### Methodology:
+
+1.  **Graphical Representations:**
+    -   Utilizing ggplot2 and other visualization libraries, we generate a spectrum of plots, including scatter plots and bar plots, to capture diverse aspects of the data.
+2.  **Statistical Summary:**
+    -   Descriptive statistics and summary metrics provide a quantitative snapshot of key variables, aiding in the identification of central tendencies and dispersions.
+3.  **Temporal Trends:**
+    -   Time series visualizations and analyses unveil temporal trends, allowing us to discern any shifting patterns in Formula 1 dynamics over the years.
+
+### Key Takeaways:
+
+-   It serves as a crucial step in understanding the inherent nature of the data before delving into complex statistical models.
+-   Visualizations and statistical summaries act as powerful tools in elucidating patterns and guiding subsequent analyses.
+-   Identification of outliers and anomalies ensures a robust foundation for further exploration and hypothesis testing.
+
+As we embark on this journey, the objective is to glean meaningful insights that will inform subsequent analyses and contribute to a holistic understanding of the Formula 1 competition dynamics.
+
+```{r}
+# Count the number of unique raceId entries for each year
+unique_race_count <- merged_data %>%
+  group_by(year) %>%
+  summarise(unique_race_count = n_distinct(raceId))
+
+# Identify exceptional years
+exceptional_years <- c(2020, 2023)  
+
+# Plot the results
+ggplot(unique_race_count, aes(x = factor(year), y = unique_race_count, fill = factor(year))) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  scale_fill_manual(values = ifelse(unique_race_count$year %in% exceptional_years, "red", "#2196F3")) +
+  labs(title = "Unique Race Count for Each Season",
+       x = "Season (Year)",
+       y = "Unique Race Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.caption = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        legend.position = "none")
+```
+
+This code generates a bar plot showing the unique race count for each season (year). The blue bars represent the regular distribution of races, while the red points highlight exceptional years. These exceptional years, such as 2020 and 2023, may have deviated from the usual distribution due to external factors like the COVID-19 pandemic or data update delays.
+
+------------------------------------------------------------------------
+
+```{r}
+# Sum the points for each year
+sum_points <- merged_data %>%
+  group_by(year) %>%
+  summarize(total_points = sum(across("points", ~ sum(., na.rm = TRUE)), na.rm = TRUE))
+
+# Create a bar plot with the sum of points for each year
+ggplot(sum_points, aes(x = as.factor(year), y = total_points)) +
+  geom_col(fill = "skyblue") +
+  labs(title = "Total Points per Year",
+       x = "Year",
+       y = "Total Points")
+
+```
+
+------------------------------------------------------------------------
+
+```{r}
+# Summarize total wins for each driver
+top_winning_drivers <- merged_data %>%
+  filter(positionOrder == 1) %>%
+  group_by(driverId) %>%
+  summarize(total_wins = n())
+
+# Merge with driver information
+top_winning_drivers <- top_winning_drivers %>%
+  inner_join(drivers_df, by = "driverId")
+
+# Create a bar plot for the top winning driver
+ggplot(top_winning_drivers, aes(x = reorder(driverRef, -total_wins), y = total_wins, fill = driverRef)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = total_wins), vjust = -0.5, size = 3) +
+  labs(title = "Top Winning Driver Since 2010",
+       x = "Driver",
+       y = "Total Wins") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+Undoubtedly, the dominant force in Formula 1 since 2010 has been Lewis Hamilton, securing an impressive total of 92 victories. Following closely in the ranks are Sebastian Vettel and Max Verstappen, clinching the second and third positions with 48 and 45 wins, respectively. Hamilton's remarkable success on the track has established him as the most prolific winner of the past decade.
+
+------------------------------------------------------------------------
+
+```{r}
+
+# Summarize total pole position for each driver
+top_poleposition_drivers <- merged_data %>%
+  filter(grid == 1) %>%
+  group_by(driverId) %>%
+  summarize(total_poleposition = n())
+
+
+# Merge with driver information
+top_poleposition_drivers <- top_poleposition_drivers %>%
+  inner_join(drivers_df, by = "driverId")
+
+
+# Plot the results
+ggplot(top_poleposition_drivers, aes(x = reorder(driverRef, -total_poleposition), y = total_poleposition, fill = driverRef)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = total_poleposition), vjust = -0.5, size = 3) +
+  labs(title = "Top pole position Drivers Since 2010",
+       x = "Driver",
+       y = "Total pole position") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+```
+
+In the realm of pole positions, Lewis Hamilton dominates as the most prolific driver with an impressive tally of 87, firmly securing the top spot. Sebastian Vettel follows with 52 pole positions. A compelling twist unfolds as Max Verstappen, while not in the top 3 for pole positions, remarkably claims a spot among the top 3 for total wins, highlighting a distinct strength in race execution and strategic prowess.
+
+------------------------------------------------------------------------
+
+```{r}
+races_since_2010 <- races_df %>%
+  filter(year >= 2010)
+
+constructors_wins <- races_since_2010 %>%
+  left_join(constructors_results_df, by = "raceId") %>%
+  group_by(raceId) %>%
+  filter(points == max(points, na.rm = TRUE)) %>%  
+  group_by(constructorId) %>%
+  summarize(total_wins = n())    
+
+# Merge with constructor information
+top_winning_constructors <- constructors_wins %>%
+  inner_join(constructors_df, by = "constructorId")
+
+# Create a bar plot for the top winning constructor
+ggplot(top_winning_constructors, aes(x = reorder(name, -total_wins), y = total_wins, fill = name)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(title = "Top Winning Constructor Since 2010",
+       x = "Constructor",
+       y = "Total Wins") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+  geom_text(aes(label = total_wins), vjust = -0.5, color = "black", size = 3)  
+
+```
+
+In the realm of Formula 1 constructors, Mercedes stands out as the most dominant force, clinching an impressive 114 victories. Red Bull follows closely behind, securing a commendable tally of 91 wins, establishing themselves as a formidable powerhouse in the world of motorsport.
+
+------------------------------------------------------------------------
+
+```{r}
+# Filter data for races since 2010
+lap_times_since_2010 <- lap_times_df %>%
+  inner_join(races_df, by = "raceId") %>%
+  filter(year >= 2010)
+
+# Find the fastest lap for each race
+fastest_laps <- lap_times_since_2010 %>%
+  filter(!is.na(milliseconds)) %>%  # Remove laps without recorded time
+  group_by(raceId) %>%
+  arrange(milliseconds) %>%
+  slice_head()  # Keep only the fastest lap for each race
+
+# Count the number of fastest laps for each driver
+fastest_laps_count <- fastest_laps %>%
+  group_by(driverId) %>%
+  summarize(total_fastest_laps = n()) %>%
+  top_n(10, total_fastest_laps)  # Select the top 10 drivers
+
+# Merge with driver information
+top_fastest_drivers <- fastest_laps_count %>%
+  inner_join(drivers_df, by = "driverId")
+
+# Plot the top 10 drivers with adjusted proportions
+ggplot(top_fastest_drivers, aes(x = reorder(paste(forename, surname), -total_fastest_laps), y = total_fastest_laps, fill = total_fastest_laps)) +
+  geom_bar(stat = "identity", color = "black", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = total_fastest_laps), vjust = -0.5, size = 3.5, color = "black") + 
+  scale_fill_gradientn(colors = viridis(10)) +
+  labs(title = "Top 10 Drivers with Most Fastest Laps Since 2010",
+       x = "Driver",
+       y = "Total Fastest Laps") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.title = element_text(size = 16, face = "bold"),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.position = "none")  # Hide legend for better clarity
+
+
+```
+
+Lewis Hamilton leads the pack as the driver with the most fastest laps since 2010, boasting an impressive total of 59 fastest laps. Sebastian Vettel secures the second position with 35 fastest laps, closely followed by Max Verstappen with 29 fastest laps.
+
+------------------------------------------------------------------------
+
+```{r}
+# Calculate the total position change for each driver
+driver_position_change <- merged_data %>%
+  group_by(driverId) %>%
+  summarize(total_position_change = sum(positionOrder - grid))
+
+# Join with drivers_df to get driver names
+driver_position_change <- driver_position_change %>%
+  inner_join(drivers_df, by = "driverId")
+
+# Order the data by total position change
+driver_position_change <- driver_position_change %>%
+  arrange(total_position_change)
+
+# Calculate the number of observations
+num_obs <- nrow(driver_position_change)
+
+# Calculate the indices for the first and last tenth
+first_tenth_index <- round(0.1 * num_obs)
+last_tenth_index <- round(0.9 * num_obs)
+
+# Filter the data to include only the first and last tenth
+outliers <- driver_position_change %>%
+  filter(row_number() <= first_tenth_index | row_number() > last_tenth_index)
+
+# Create a bar plot for outliers with labels
+ggplot(outliers, aes(x = reorder(driverRef, total_position_change), y = total_position_change)) +
+  geom_col(aes(fill = factor(sign(total_position_change)))) +
+  geom_text(aes(label = total_position_change), vjust = -0.5, color = "black") +
+  scale_fill_manual(values = c("red", "green"), name = "Position Change") +
+  labs(title = "Total Position Change for Outlier Drivers (2010 and onwards)",
+       x = "Driver",
+       y = "Total Position Change") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "top")
+
+```
+
+The plot illustrates the overall position changes for outlier drivers. Red bars represent drivers who lost positions, while green bars represent those who gained positions. Notably, Hulkenberg stands out as the driver with the most significant positive change, gaining a total of 305 positions since 2010. Conversely, Ericsson holds the record for the least position change, losing a total of 186 positions during the same period.
+
+------------------------------------------------------------------------
+
+
+```{r}
+# Calculate the total number of races for each grid position
+total_races_per_grid <- table(merged_data$grid)
+
+# Calculate the number of wins for each grid position
+wins_per_grid <- table(merged_data$grid[merged_data$positionOrder == 1])
+
+# Ensure the vectors have the same length
+all_grid_positions <- 1:max(as.numeric(names(total_races_per_grid)), as.numeric(names(wins_per_grid)))
+total_races_per_grid <- total_races_per_grid[as.character(all_grid_positions)]
+wins_per_grid <- wins_per_grid[as.character(all_grid_positions)]
+
+# Calculate the winning percentage for each grid position
+winning_percentage_per_grid <- wins_per_grid / total_races_per_grid * 100
+
+# Display the winning percentage for the first grid position
+cat("Winning percentage for the first grid position:", ifelse(1 %in% all_grid_positions, winning_percentage_per_grid[as.character(1)], 0), "%\n")
+
+```
+
+The winning percentage for the first grid position is 51.3%. 
+
+------------------------------------------------------------------------
+
+```{r}
+# Calculate the total number of races for each grid position
+total_races_per_grid <- table(merged_data$grid)
+
+# Calculate the number of wins for each grid position
+wins_per_grid <- table(merged_data$grid[merged_data$positionOrder == 1])
+
+# Ensure the vectors have the same length
+all_grid_positions <- 1:max(as.numeric(names(total_races_per_grid)), as.numeric(names(wins_per_grid)))
+total_races_per_grid <- total_races_per_grid[as.character(all_grid_positions)]
+wins_per_grid <- wins_per_grid[as.character(all_grid_positions)]
+
+# Calculate the winning percentage for each grid position
+winning_percentage_per_grid <- wins_per_grid / total_races_per_grid * 100
+
+# Create a data frame with grid position and winning percentage
+ordered_results <- data.frame(grid_position = as.numeric(names(winning_percentage_per_grid)),
+                              winning_percentage = winning_percentage_per_grid)
+
+# Remove rows with NA values in winning_percentage
+ordered_results <- na.omit(ordered_results)
+
+# Drop the "winning_percentage.Var1" column
+ordered_results <- subset(ordered_results, select = -c(winning_percentage.Var1))
+
+# Order the results by winning percentage in descending order
+ordered_results <- ordered_results[order(ordered_results$winning_percentage.Freq, decreasing = TRUE), ]
+
+# Display the ordered results
+cat("Grid positions ordered by winning percentage:\n")
+print(ordered_results)
+
+ggplot(ordered_results, aes(x = reorder(factor(grid_position), -winning_percentage.Freq), y = winning_percentage.Freq)) +
+  geom_bar(stat = "identity", fill = "#1f78b4", color = "black") +
+  labs(title = "Grid Positions Ordered by Winning Percentage",
+       x = "Grid Position",
+       y = "Winning Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = paste0(round(winning_percentage.Freq, 2), "%")), vjust = -0.5, size = 3) +  # Label with percentage
+  scale_fill_manual(values = "#1f78b4")  # Matching color for bars
+
+```
+
+The plot above shows the winning percentage for each grid position. The grid position with the highest winning percentage is the first grid position, with a winning percentage of 51.3%. The grid position with the second highest winning percentage is the second grid position, with a winning percentage of 25.9%. The grid position with the third highest winning percentage is the third grid position, with a winning percentage of 10.7%. It's interesting to see that the 87,9% of the total races are won by the first three grid positions. 
+
+------------------------------------------------------------------------
+
+```{r}
+# Scatter plot with regression line
+ggplot(merged_data, aes(x = grid, y = positionOrder)) +
+  geom_point(alpha = 0.6, color = "dodgerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "orange") +
+  labs(title = "Scatter plot: Grid Position vs Arriving Order",
+       x = "Grid Position", y = "Arriving Order") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.position = "none")
+```
+
+The plot above shows the relationship between grid position and arriving order. The orange line is the regression line. The regression line shows that there is a positive relationship between grid position and arriving order. This means that the higher the grid position, the higher the arriving order. 
+
+------------------------------------------------------------------------
+
+```{r}
+# Create a binary variable indicating whether the driver won or not
+merged_data$win <- ifelse(merged_data$positionOrder == 1, 1, 0)
+
+# Logistic regression model
+logistic_model_since_2010 <- glm(win ~ grid, data = merged_data, family = "binomial")
+
+# Model summary
+summary(logistic_model_since_2010)
+
+# Create a dataframe with desired starting positions
+grid_values <- data.frame(grid = 1:20)
+
+# Calculate estimated win probabilities for each starting position
+predicted_probs <- predict(logistic_model_since_2010, newdata = grid_values, type = "response")
+
+# Combine starting positions and estimated win probabilities in a dataframe
+predicted_data <- data.frame(grid = grid_values$grid, predicted_prob = predicted_probs)
+
+# Print the resulting dataframe
+print(predicted_data)
+
+```
+
+The code presented above illuminates the estimated probabilities of winning a Grand Prix associated with different starting grid positions. Leveraging the logistic regression model (glm), these probabilities are derived, revealing a statistically significant relationship between a driver's grid position and their likelihood of securing a victory.
+
+The negative coefficient for the "grid" variable in the logistic regression model signifies that higher grid positions are correlated with lower odds of winning. The model demonstrates a robust fit, supported by the low residual deviance and AIC values.
+
+According to the model's predictions, the probability of winning a Grand Prix stands at 34.3% for the first grid position, 22.4% for the second grid position, and 13.7% for the third grid position. Conversely, the probability drops to a mere 0.3% for the 10th grid position.
+
+------------------------------------------------------------------------
+
+```{r}
+# Calculate the correlation for each season
+seasonal_correlations <- merged_data %>%
+  group_by(year) %>%
+  summarize(correlation = cor(grid, positionOrder, use = "complete.obs"))
+
+# Calculate the overall correlation across all seasons
+overall_correlation <- cor(merged_data$grid, merged_data$positionOrder, use = "complete.obs")
+
+# Perform linear regression
+lm_model <- lm(positionOrder ~ grid, data = merged_data)
+
+# Print the results
+
+print(summary(lm_model))
+
+cat("Overall Correlation across all seasons from 2010:", overall_correlation, "\n")
+cat("Seasonal Correlations:\n")
+print(seasonal_correlations)
+cat("\nLinear Regression Coefficients:\n")
+```
+
+The code showcased above provides a detailed examination of the correlation between grid position and race results, individually assessed for each season. Furthermore, it calculates the overarching correlation across all seasons, culminating in an overall correlation coefficient of 0.588. To delve even deeper, the code undertakes a linear regression model, shedding light on the quantitative relationship between grid positions and final race standings.
+
+------------------------------------------------------------------------
+
+```{r}
+# Check correlation and perform linear regression between grid position and arriving order
+# Get a vector of unique circuit IDs since 2010
+unique_circuits <- races_data %>%
+  distinct(circuitId)
+
+# Function to perform analysis for a specific circuit
+analyze_circuit <- function(circuit_id) {
+  # Filter results data for the selected circuit
+  results_data <- results_df %>%
+    inner_join(races_data %>% filter(circuitId == circuit_id), by = "raceId") %>%
+    select(raceId, year, grid, positionOrder) %>%
+    drop_na(grid, positionOrder)  # Remove rows with missing values
+  
+  # Calculate the overall correlation across all seasons
+  overall_correlation <- if (nrow(results_data) > 1) {
+    cor(results_data$grid, results_data$positionOrder, use = "complete.obs")
+  } else {
+    NA
+  }
+  
+  # Retrieve circuit name from circuits_df
+  circuit_name <- circuits_df %>%
+    filter(circuitId == circuit_id) %>%
+    pull(name)
+  
+  # Return results
+  return(data.frame(circuitId = circuit_id,
+                    name = circuit_name,
+                    overall_correlation = overall_correlation))
+}
+
+# Apply the analysis function to each circuit
+results_circuits <- unique_circuits %>%
+  rowwise() %>%
+  do(analyze_circuit(.))
+
+# Order results by overall correlation
+results_circuits <- results_circuits %>%
+  arrange(desc(overall_correlation))
+
+# Print the ordered results
+print(results_circuits, n = nrow(results_circuits))
+
+# Filter circuits with races since 2010
+filtered_circuits <- circuits_df %>%
+  inner_join(races_data %>% filter(year >= 2010), by = "circuitId") %>%
+  distinct(circuitId, circuit_name = name.x, location, country, lat, lng, alt)  
+
+# Add overall correlation to the filtered circuits
+filtered_circuits <- filtered_circuits %>%
+  left_join(results_circuits, by = "circuitId")
+
+# Create a leaflet map
+world_map <- leaflet(data = filtered_circuits) %>%
+  addTiles() %>%
+  addMarkers(
+    lat = ~lat,
+    lng = ~lng,
+    popup = ~paste(circuit_name, "<br>", "Location:", location, "<br>", "Country:", country, "<br>", "Altitude:", alt, "m", "<br>", "Overall Correlation:", overall_correlation)
+  )
+
+# Print the map
+print(world_map)
+```
+
+The provided code unveils a detailed exploration of the correlation between grid position and race results, distinctly examined for each circuit. Additionally, the code crafts a visual representation of the global circuit landscape through an interactive map, where each circuit is denoted by a marker. 
+
+------------------------------------------------------------------------
+
+```{r}
+# Get a vector of unique driver IDs
+unique_drivers <- merged_data %>%
+  distinct(driverId)
+
+# Function to perform analysis for a specific driver
+analyze_driver <- function(driver_id) {
+  # Filter merged data for the selected driver
+  driver_data <- merged_data %>%
+    filter(driverId == driver_id) %>%
+    select(raceId, year, grid, positionOrder) %>%
+    drop_na(grid, positionOrder)  # Remove rows with missing values
+  
+  # Calculate the overall correlation across all races
+  overall_correlation <- if (nrow(driver_data) > 1) {
+    cor(driver_data$grid, driver_data$positionOrder, use = "complete.obs")
+  } else {
+    NA
+  }
+  
+  # Retrieve driver info from drivers_df
+  driver_info <- drivers_df %>%
+    filter(driverId == driver_id) %>%
+    select(name = driverRef, nationality)
+  
+  # Return results
+  return(data.frame(driverId = driver_id,
+                    name = driver_info$name,
+                    nationality = driver_info$nationality,
+                    overall_correlation = overall_correlation))
+}
+
+# Apply the analysis function to each driver
+results_drivers <- unique_drivers %>%
+  rowwise() %>%
+  do(analyze_driver(.))
+
+# Order results by overall correlation
+results_drivers <- results_drivers %>%
+  arrange(desc(overall_correlation))
+
+# Print the ordered results
+print(results_drivers, n = nrow(results_drivers))
+
+
+```
+
+The code  displays the correlation between grid position and arriving order for each driver.
+
+------------------------------------------------------------------------
+
+```{r}
+# Get a vector of unique constructor IDs
+unique_constructors <- merged_data %>%
+  distinct(constructorId)
+
+# Function to perform analysis for a specific constructor
+analyze_constructor <- function(constructor_id) {
+  # Filter results data for the selected constructor
+  constructor_results <- merged_data %>%
+    filter(constructorId == constructor_id) %>%
+    select(resultId, raceId, grid, positionOrder) %>%
+    drop_na(grid, positionOrder)  # Remove rows with missing values
+  
+  # Calculate the overall correlation across all races
+  overall_correlation <- if (nrow(constructor_results) > 1) {
+    cor(constructor_results$grid, constructor_results$positionOrder, use = "complete.obs")
+  } else {
+    NA
+  }
+  
+  # Retrieve constructor name from constructor_df
+  constructor_name <- constructors_df %>%
+    filter(constructorId == constructor_id) %>%
+    pull(name)
+  
+  # Return results
+  return(data.frame(constructorId = constructor_id,
+                    name = constructor_name,
+                    overall_correlation = overall_correlation))
+}
+
+# Apply the analysis function to each constructor
+results_constructors <- unique_constructors %>%
+  rowwise() %>%
+  do(analyze_constructor(.))
+
+# Order results by overall correlation
+results_constructors <- results_constructors %>%
+  arrange(desc(overall_correlation))
+
+# Print the ordered results
+print(results_constructors, n = nrow(results_constructors))
+
+```
+
+The code above displays the correlation between grid position and arriving order for each constructor.
+
+------------------------------------------------------------------------
+
+```{r}
+#average pit stop duration for winning drivers
+merge_dataset <- pit_stops_df %>%
+  inner_join(merged_data, by = c("raceId", "driverId")) %>%
+  filter(positionOrder == 1)
+
+# Convert milliseconds.x to numeric
+merge_dataset <- merge_dataset %>%
+  mutate(milliseconds = as.numeric(milliseconds))
+
+#Filter out data where milliseconds.x is more than 30 seconds
+filtered_data <- merge_dataset %>%
+ filter(milliseconds <= 36691.125)  
+
+summary_statistics <- filtered_data %>%
+  summarise(
+    average_milliseconds = mean(milliseconds, na.rm = TRUE),
+    median_milliseconds = median(milliseconds, na.rm = TRUE),
+    sd_milliseconds = sd(milliseconds, na.rm = TRUE),
+    var_milliseconds = var(milliseconds, na.rm = TRUE),
+    min_milliseconds = min(milliseconds, na.rm = TRUE),
+    max_milliseconds = max(milliseconds, na.rm = TRUE),
+    range_milliseconds = max_milliseconds - min_milliseconds,
+    quantile_25 = quantile(milliseconds, 0.25, na.rm = TRUE),
+    quantile_75 = quantile(milliseconds, 0.75, na.rm = TRUE),
+    interquartile_range = quantile_75 - quantile_25
+  )
+
+# Print the average milliseconds
+print(summary_statistics)
+
+    
+```
+
+the code shows the average, median, standard deviation, variance, minimum, maximum, range, 25th percentile, 75th percentile, and interquartile range of the pit stop duration for winning drivers. 
+I decided to eliminate the outliers from the dataset, as they are not representative of the average pit stop duration. I used the 1.5*IQR rule to identify the outliers. The outliers are the pit stops that are more than 1.5 times the interquartile range (IQR) below the first quartile or above the third quartile. The IQR is the difference between the third quartile and the first quartile. The first quartile is the 25th percentile and the third quartile is the 75th percentile. The 1.5*IQR rule is a common rule of thumb to identify outliers. It is not a hard and fast rule, but it is a good starting point. 
+
+------------------------------------------------------------------------
+
+```{r}
+
+# Join with pit_stops_df and circuits_df
+pit_stops_drivers <- merged_data %>%
+  inner_join(pit_stops_df, by = c("raceId", "driverId"))
+
+
+# Find the pit stops that are longer than 36691.125 milliseconds (outliers) and change the value with the average of the pit stops which is 23066.89 milliseconds
+pit_stops_drivers <- pit_stops_drivers %>%
+  mutate(milliseconds = ifelse(milliseconds > 36691.125, 23066.89, milliseconds))
+
+# Convert milliseconds to numeric, handling non-numeric values and NAs
+pit_stops_drivers <- pit_stops_drivers %>%
+  mutate(milliseconds = as.numeric(milliseconds))
+
+# Calculate the total number of pit stops for each raceId and circuitId
+# Divide by the number of unique drivers who did at least one pit stop
+total_pitstops_per_race <- pit_stops_drivers %>%
+  group_by(raceId, circuitId) %>%
+  summarise(
+    total_pitstops = n()
+  )
+
+pit_stop_total_drivers <- pit_stops_drivers %>%
+  group_by(raceId, circuitId) %>%
+  summarise(
+    total_drivers_with_pitstop = n_distinct(driverId)
+  )
+total_pitstops_per_race <- total_pitstops_per_race %>%
+  inner_join(pit_stop_total_drivers, by = c("raceId", "circuitId")) %>%
+  mutate(total_pitstops = total_pitstops / total_drivers_with_pitstop)
+
+# Calculate average pit stop duration for each raceId and circuitId
+average_pitstop_duration <- pit_stops_drivers %>%
+  group_by(raceId, circuitId) %>%
+  summarise(
+    average_duration = mean(milliseconds, na.rm = TRUE)
+  )
+
+# Inner join between total_pitstops_per_race and average_pitstop_duration on raceId and circuitId
+result_data <- inner_join(total_pitstops_per_race, average_pitstop_duration, by = c("raceId", "circuitId"))
+
+# Join with circuits_df to get circuit information
+result_data <- inner_join(result_data, circuits_df, by = "circuitId")
+
+# Calculate average pit stop duration and number for each circuit
+average_pitstops_duration_per_circuit <- result_data %>%
+  group_by(circuitId, name, location, country) %>%
+  summarise(
+    average_pitstops = mean(total_pitstops),
+    average_duration = mean(average_duration)
+  )
+
+# Order the dataset by average duration
+average_pitstops_duration_per_circuit <- average_pitstops_duration_per_circuit %>%
+  arrange(average_pitstops)
+
+# Print the ordered dataset and overall average
+print(average_pitstops_duration_per_circuit)
+
+```
+
+The provided code showcases the presentation of both the average duration and the average quantity of pit stops for each circuit.
+
+------------------------------------------------------------------------
+
+```{r}
+grand_prix_winners <- merged_data %>%
+  filter(positionOrder == 1)
+
+# Join with pit_stops_df and circuits_df
+pit_stops_winners <- grand_prix_winners %>%
+  inner_join(pit_stops_df, by = c("raceId", "driverId"))
+
+#find the pit stops that are longer than 36691.125 milliseconds and change the value with the average of the pit stops which is 23066.89 milliseconds
+pit_stops_winners <- pit_stops_winners %>%
+  mutate(milliseconds = ifelse(milliseconds > 36691.125, 23066.89, milliseconds))
+
+# Convert milliseconds to numeric, handling non-numeric values and NAs
+pit_stops_winners <- pit_stops_winners %>%
+  mutate(milliseconds = as.numeric(milliseconds))
+
+# Calculate the total number of pit stops for each raceId and circuitId
+total_pitstops_winners <- pit_stops_winners %>%
+  group_by(raceId, circuitId) %>%
+  summarise(
+    total_pitstops = n()
+  )
+
+# Calculate average pit stop duration for each raceId and circuitId
+average_pitstop_winners <- pit_stops_winners %>%
+  group_by(raceId, circuitId) %>%
+  summarise(
+    average_duration = mean(milliseconds, na.rm = TRUE)
+  )
+
+# Inner join between total_pitstops_per_race and average_pitstop_winners on raceId and circuitId
+result_data <- inner_join(total_pitstops_winners, average_pitstop_winners, by = c("raceId", "circuitId"))
+
+# Join with circuits_df to get circuit information
+result_data <- inner_join(result_data, circuits_df, by = "circuitId")
+
+# Calculate average pit stop duration and number for each circuit
+average_pitstop_winners <- result_data %>%
+  group_by(circuitId, name, location, country) %>%
+  summarise(
+    average_pitstops = mean(total_pitstops),
+    average_duration = mean(average_duration)
+  )
+
+# Order the dataset by average duration
+average_pitstop_winners <- average_pitstop_winners %>%
+  arrange(average_pitstops)
+
+# Print the ordered dataset and overall average
+print(average_pitstop_winners)
+
+```
+
+The provided code highlights the presentation of average pit stop duration and average pit stop quantity for each circuit, specifically focusing on winning drivers.
+
+------------------------------------------------------------------------
+
+```{r}
+
+# Calculate the ratio for each row
+ratio_data <- average_pitstop_winners %>%
+  inner_join(average_pitstops_duration_per_circuit, by = c("circuitId", "name", "location", "country")) %>%
+  mutate(
+    ratio_pitstops = average_pitstops.x / average_pitstops.y,
+    ratio_duration = average_duration.x / average_duration.y
+  ) %>%
+  select(circuitId, name, location, country, ratio_pitstops, ratio_duration)
+
+# Print the result
+print(ratio_data)
+
+```
+
+
+------------------------------------------------------------------------
+
+```{r}
+# Use the mean function to calculate the average, and na.rm = TRUE to handle missing values
+overall_pitstop_duration <- mean(ratio_data$ratio_duration, na.rm = TRUE)
+overall_pitstops <- mean(ratio_data$ratio_pitstops, na.rm = TRUE)
+
+# Print the result
+print(paste("The average of 'ratio_duration' in 'ratio_data' is:", round(overall_pitstop_duration, 2)))
+print(paste("The average of 'ratio_pitstops' in 'ratio_data' is:", round(overall_pitstops, 2)))
+```
+
+
+These findings suggest that, on average, drivers in the first position tend to have fewer pit stops and shorter pit stop durations compared to other drivers in the race.
+
+
+### 5.2 Correlation Sprint race and Qualifying
+
+```{r}
+# Filter and clean results data for the selected races
+merged_data_sprint <- sprint_results_df %>%
+  inner_join(races_data, by = "raceId") %>%
+  filter(!is.na(grid) & !is.na(positionOrder))  # Remove rows with missing values
+
+# Initialize a list to store correlation results for each season
+correlation_results_sprint <- list()
+
+# Get unique seasons
+unique_seasons_sprint <- unique(merged_data_sprint$year)
+unique_seasons_sprint <- unique_seasons_sprint[order(unique_seasons_sprint)]  # Corrected variable name
+
+# Loop over each season
+for (season in unique_seasons_sprint) {
+  # Subset data for the current season
+  season_data_sprint <- merged_data_sprint[merged_data_sprint$year == season, ]
+  
+  # Calculate Pearson correlation coefficient
+  pearson_corr_sprint <- cor(season_data_sprint$grid, season_data_sprint$positionOrder, method = "pearson")
+  
+  # Calculate Spearman correlation coefficient
+  spearman_corr_sprint <- cor(season_data_sprint$grid, season_data_sprint$positionOrder, method = "spearman")
+  
+  # Store results in the list
+  correlation_results_sprint[[as.character(season)]] <- c(pearson_corr = pearson_corr_sprint, spearman_corr = spearman_corr_sprint)
+}
+
+# Display the correlation results for each season
+for (season in unique_seasons_sprint) {
+  cat("Season:", season, "\n")
+  cat("  Pearson correlation:", correlation_results_sprint[[as.character(season)]]["pearson_corr"], "\n")
+  cat("  Spearman correlation:", correlation_results_sprint[[as.character(season)]]["spearman_corr"], "\n")
+}
+
+```
+
+As evident from the data, a robust correlation exists between the grid position and the final arriving position, surpassing the correlation observed in traditional races.
+
+------------------------------------------------------------------------
+
+```{r}
+# Count the number of unique raceId entries for each year
+unique_sprint_count <- sprint_merged_data %>%
+  group_by(year) %>%
+  summarise(unique_sprint_count = n_distinct(raceId))
+
+# Plot the results
+ggplot(unique_sprint_count, aes(x = factor(year), y = unique_sprint_count, fill = factor(year))) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  labs(title = "Unique Sprint Race Count for Each Season",
+       x = "Season (Year)",
+       y = "Unique Sprint Race Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.caption = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        legend.position = "none")
+```
+
+------------------------------------------------------------------------
+
+```{r}
+# Summarize total wins for each driver
+top_sprint_winning_drivers <- sprint_merged_data %>%
+  filter(positionOrder == 1) %>%
+  group_by(driverId) %>%
+  summarize(total_sprint_wins = n())
+
+# Merge with driver information
+top_sprint_winning_drivers <- top_sprint_winning_drivers %>%
+  inner_join(drivers_df, by = "driverId")
+
+# Create a bar plot for the top winning driver
+ggplot(top_sprint_winning_drivers, aes(x = reorder(driverRef, -total_sprint_wins), y = total_sprint_wins, fill = driverRef)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = total_sprint_wins), vjust = -0.5, size = 3) +  
+  labs(title = "Top Sprint Winning Driver Since 2010",
+       x = "Driver",
+       y = "Total Sprint Wins") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+Max Verstappen dominated the sprint races, clinching the majority of victories with a total of 5, while Valtteri Bottas secured two wins. In close pursuit are Sergio Perez and George Russell, each notching one victory apiece.
+
+------------------------------------------------------------------------
+
+```{r}
+# Summarize total pole position for each driver
+top_sprint_poleposition_drivers <- sprint_merged_data %>%
+  filter(grid == 1) %>%
+  group_by(driverId) %>%
+  summarize(total_sprint_poleposition = n())
+
+
+# Merge with driver information
+top_sprint_poleposition_drivers <- top_sprint_poleposition_drivers %>%
+  inner_join(drivers_df, by = "driverId")
+
+
+# Plot the results
+ggplot(top_sprint_poleposition_drivers, aes(x = reorder(driverRef, -total_sprint_poleposition), y = total_sprint_poleposition, fill = driverRef)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = total_sprint_poleposition), vjust = -0.5, size = 3) + 
+  labs(title = "Top sprint pole position Drivers Since 2010",
+       x = "Driver",
+       y = "Total sprint pole position") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+```
+
+Max Verstappen showcased a commanding performance in sprint race pole positions, securing the majority of victories with a total of 5. Valtteri Bottas, Lewis Hamilton, Kevin Magnussen, and Charles Leclerc each secured one pole position apiece.
+
+------------------------------------------------------------------------
+
+```{r}
+# Scatter plot with regression line
+ggplot(sprint_merged_data, aes(x = grid, y = positionOrder)) +
+  geom_point(alpha = 0.6, color = "dodgerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "orange") +
+  labs(title = "Scatter plot: Grid Position vs Arriving Order",
+       x = "Grid Position", y = "Arriving Order") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.position = "none")
+```
+
+The above plot shows the positive correlation between grid position and the Arriving order.
+
+------------------------------------------------------------------------
+
+```{r}
+# Create a binary variable indicating whether the pilot has won or not
+sprint_merged_data$win <- ifelse(sprint_merged_data$positionOrder == 1, 1, 0)
+
+# Logistic regression model
+logistic_model_since_2010 <- glm(win ~ grid, data = sprint_merged_data, family = "binomial")
+
+# Model summary
+summary(logistic_model_since_2010)
+
+# Use the fitted logistic regression model
+logistic_model <- glm(win ~ grid, data = sprint_merged_data, family = "binomial")
+
+# Create a dataframe with desired starting positions
+grid_values <- data.frame(grid = 1:20)  # Adjust this range according to your needs
+
+# Calculate estimated win probabilities for each starting position
+predicted_probs <- predict(logistic_model, newdata = grid_values, type = "response")
+
+# Combine starting positions and estimated win probabilities into a dataframe
+predicted_data <- data.frame(grid = grid_values$grid, predicted_prob = predicted_probs)
+
+# Print the resulting dataframe
+print(predicted_data)
+
+```
+
+The above table shows the estimated probability of winning for each grid position. The probability of winning is highest for the first grid position, and decreases as the grid position decreases.
+
+------------------------------------------------------------------------
+
+```{r}
+# Calculate the total number of races for each grid position
+total_sprint_races_per_grid <- table(sprint_merged_data$grid)
+
+# Calculate the number of wins for each grid position
+sprint_wins_per_grid <- table(sprint_merged_data$grid[sprint_merged_data$positionOrder == 1])
+
+# Ensure the vectors have the same length
+all_sprint_grid_positions <- 1:max(as.numeric(names(total_sprint_races_per_grid)), as.numeric(names(sprint_wins_per_grid)))
+total_sprint_races_per_grid <- total_sprint_races_per_grid[as.character(all_grid_positions)]
+sprint_wins_per_grid <- sprint_wins_per_grid[as.character(all_grid_positions)]
+
+# Calculate the winning percentage for each grid position
+winning_percentage_per_grid <- sprint_wins_per_grid / total_sprint_races_per_grid * 100
+
+# Create a data frame with grid position and winning percentage
+ordered_results <- data.frame(grid_position = as.numeric(names(winning_percentage_per_grid)),
+                              winning_percentage = winning_percentage_per_grid)
+
+# Remove rows with NA values in winning_percentage
+ordered_results <- na.omit(ordered_results)
+
+# Drop the "winning_percentage.Var1" column
+ordered_results <- subset(ordered_results, select = -c(winning_percentage.Var1))
+
+# Order the results by winning percentage in descending order
+ordered_results <- ordered_results[order(ordered_results$winning_percentage.Freq, decreasing = TRUE), ]
+
+# Display the ordered results
+cat("Grid positions ordered by winning percentage:\n")
+print(ordered_results)
+
+ggplot(ordered_results, aes(x = reorder(factor(grid_position), -winning_percentage.Freq), y = winning_percentage.Freq)) +
+  geom_bar(stat = "identity", fill = "#6a3d9a", color = "black") +  # Custom color
+  labs(title = "Sprint Grid Positions Ordered by Winning Percentage",
+       x = "Grid Position",
+       y = "Winning Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = paste0(round(winning_percentage.Freq, 2), "%")), vjust = -0.5, size = 3) +  # Label with percentage
+  scale_fill_manual(values = "#6a3d9a")  # Matching color for bars
+```
+
+The statistical breakdown of sprint race victories reveals that 55.56% were claimed by drivers starting from the first grid position, while the second and third grid positions accounted for 33.33% and 11.11% of the wins, respectively.
+
+------------------------------------------------------------------------
+
+## 6. Conclusion
+
+This study reinforces the presence of a positive correlation (0.5883153) between grid position and finishing order in Formula 1 races. While variations exist across seasons and circuits, the average correlation maintains a consistent pattern.
+
+Specific circuits, like Autódromo Internacional do Algarve (0.8270677), exhibit a robust correlation, contrasting with others, such as Autodromo Enzo e Dino Ferrari (0.3714756), which demonstrate a weaker but consistently positive relationship.
+
+Noteworthy is the examination of individual drivers, with Logan Sargeant showcasing the highest correlation (0.60299786), signaling an exceptional ability to convert favorable grid positions into race success. Conversely, some drivers display a slight negative correlation.
+
+As expected, the Williams team stands out with a strong correlation, underlining a consistent performance pattern concerning grid positions.
+
+Regarding constructors, while an overall modest correlation with grid positions is observed, exceptions like the Williams team underscore the significant influence of team dynamics.
+
+Exploring pit stop dynamics, a distinct trend emerges as winning drivers tend to make fewer pit stops, emphasizing their efficiency and strategic prowess during races.
+
+Sprint races exhibit an even stronger correlation, likely influenced by their condensed format, leaving drivers with limited time for recovery from unfavorable starting positions.
+
+A notable observation is the significance of a favorable grid position, with a substantial 87.9% of standard races won by drivers starting in the top 3 positions. In sprint races, this percentage rises to 100%, highlighting the critical importance of a favorable grid position in shorter-format competitions.
+
+A curious trend emerges when examining the ratio between winning Grand Prix races and pole positions for the top 4 drivers. Sebastian Vettel, Lewis Hamilton, Nico Rosberg, and Max Verstappen all showcase varied ratios, shedding light on factors such as overtaking ability, car performance, circuit characteristics, and weather conditions. Particularly intriguing is Max Verstappen's aggressive driving style and adept overtaking skills, evident in his high win count despite starting from the pole position less frequently.
